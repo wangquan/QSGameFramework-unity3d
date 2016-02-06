@@ -1,6 +1,6 @@
-# QSGameFramework-unity3d
+﻿# QSGameFramework-unity3d
 快速简单游戏开发框架
- 基于unity3d针对中小游戏实现简洁，快速的开发方式
+ 基于unity3d针对中小游戏实现简洁,快速的开发方式。
  结构：
 初始化管理器
 声音管理器
