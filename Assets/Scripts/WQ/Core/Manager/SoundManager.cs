@@ -27,7 +27,7 @@ namespace WQ.Core.Manager
         private AudioSource[] _efSources;//音效音道组
 
         private Asset _bgAssetBuffer;//缓存资源
-        private List<Asset> _assetBuffers;
+        private List<Asset> _efAssetBuffers;
 
         private float _bgVolume;//背景音量
         public float bgVolume
@@ -50,9 +50,9 @@ namespace WQ.Core.Manager
                 _efVolume = value;
                 if (_efVolume < 0) _efVolume = 0;
                 else if (_efVolume > 1) _efVolume = 1;
-                foreach(AudioSource auds in _efSources)
+                for (int i = 0; i < _efSources.Length; i++)
                 {
-                    auds.volume = _efVolume;
+                    _efSources[i].volume = _efVolume;
                 }
             }
         }
@@ -77,7 +77,7 @@ namespace WQ.Core.Manager
             gameObject.AddComponent<AudioListener>();
 
             _bgAssetBuffer = null;
-            _assetBuffers = new List<Asset>();
+            _efAssetBuffers = new List<Asset>();
 
             DefaultSet();
         }
@@ -218,22 +218,22 @@ namespace WQ.Core.Manager
         private Asset GetAssetBuffer(string path)
         {
             Asset asset = null;
-            foreach(Asset a in _assetBuffers)
+            for (int i = _efAssetBuffers.Count - 1; i >= 0; i--)
             {
-                if (a.path == path)
+                if (_efAssetBuffers[i].path == path)
                 {
-                    asset = a;
+                    asset = _efAssetBuffers[i];
                     break;
                 }
             }
             if (asset == null)
             {
                 asset = gbb.GetResourcesManager.Load<AudioClip>(path);
-                _assetBuffers.Add(asset);
-                if (_assetBuffers.Count > BUFFER_LENGTH_LIMIT)
+                _efAssetBuffers.Add(asset);
+                if (_efAssetBuffers.Count > BUFFER_LENGTH_LIMIT)
                 {
-                    gbb.GetResourcesManager.Remove(_assetBuffers[0].path);
-                    _assetBuffers.RemoveAt(0);
+                    gbb.GetResourcesManager.Remove(_efAssetBuffers[0].path);
+                    _efAssetBuffers.RemoveAt(0);
                 }
             }
             return asset;

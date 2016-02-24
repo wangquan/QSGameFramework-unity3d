@@ -2,7 +2,13 @@ fileFormatVersion: 2
 guid: 93113142dc673454cbecc1e06269ecf3
 MonoImporter:
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - _preUIRoot: {fileID: 167372, guid: 001b11cbff2ab94429bf3e5c5c9c8895, type: 2}
+  - _preAlert: {instanceID: 0}
+  - _preConfirm: {instanceID: 0}
+  - _preLoad: {fileID: 175178, guid: f94796b486f6a2344ba3c9f514a2da83, type: 2}
+  - _preStayTips: {instanceID: 0}
+  - _preTips: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
