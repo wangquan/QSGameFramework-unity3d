@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: e48958298d24de549a670a93c09fb288
+guid: 890717539163d544cba2ad717ca81add
 TrueTypeFontImporter:
   serializedVersion: 2
   fontSize: 16
@@ -8,8 +8,7 @@ TrueTypeFontImporter:
   characterPadding: 0
   includeFontData: 1
   use2xBehaviour: 0
-  fontNames:
-  - mnjhzgb
+  fontNames: []
   customCharacters: 
   fontRenderingMode: 0
   userData: 

@@ -91,7 +91,7 @@ namespace WQ.Core.Manager
             Asset asset = FindAsset(path);
             if (asset == null)
             {
-                asset = new Asset(path, Resources.Load<T>(path));
+                asset = new Asset(path, Resources.Load(path, typeof(T)));
                 addAssetToDictionary(path, asset);
             }
             asset.IncreaseRC();
@@ -124,7 +124,7 @@ namespace WQ.Core.Manager
 
         private IEnumerator loadAsyncCoroutine<T>(string path, Action<Asset> callback) where T : UnityEngine.Object
         {
-            ResourceRequest req = Resources.LoadAsync<T>(path);
+            ResourceRequest req = Resources.LoadAsync(path, typeof(T));
             yield return req;
             Asset asset = new Asset(path, req.asset);
             addAssetToDictionary(path, asset);
@@ -161,7 +161,7 @@ namespace WQ.Core.Manager
 
         private IEnumerator loadAsyncCoroutine<T>(string[] paths, Asset[] assets, Action<Asset[]> callback, int index) where T : UnityEngine.Object
         {
-            ResourceRequest req = Resources.LoadAsync<T>(paths[index]);
+            ResourceRequest req = Resources.LoadAsync(paths[index], typeof(T));
             yield return req;
             Asset asset = new Asset(paths[index], req.asset);
             addAssetToDictionary(paths[index], asset);

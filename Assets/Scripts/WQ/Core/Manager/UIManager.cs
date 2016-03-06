@@ -41,19 +41,8 @@ namespace WQ.Core.Manager
             }
         }
 
-        //************************序列化预设************************
-        [SerializeField]
-        private GameObject _preUIRoot;
-        [SerializeField]
-        private GameObject _preAlert;
-        [SerializeField]
-        private GameObject _preConfirm;
-        [SerializeField]
-        private GameObject _preLoad;
-        [SerializeField]
-        private GameObject _preStayTips;
-        [SerializeField]
-        private GameObject _preTips;
+        //************************预设************************
+        private Object _preTips;
 
         //************************UI组件************************
         private GameObject _uiRoot;
@@ -64,7 +53,6 @@ namespace WQ.Core.Manager
         private MyConfirm _confirm;
         private MyLoad _load;
         private MyStayTips _stayTips;
-
 
         #region ************************界面缓存列表************************
         private UIBuffer[] _uiBuffers;//界面缓存
@@ -178,13 +166,51 @@ namespace WQ.Core.Manager
         //开始阶段
         void Start()
         {
+            //>>>>>>>>>>>>>>>>加载资源<<<<<<<<<<<<<<<<<
+            string uiRootPath = PathData.UI_PATH + "UIRoot";
+            string alertPath = PathData.UI_PATH + "Alert";
+            string confirmPath = PathData.UI_PATH + "Confirm";
+            string loadPath = PathData.UI_PATH + "Load";
+            string stayTipsPath = PathData.UI_PATH + "StayTips";
+            string tipsPath = PathData.UI_PATH + "Tips";
+
+            gbb.GetResourcesManager.Load<Object>(uiRootPath);
+            gbb.GetResourcesManager.Load<Object>(alertPath);
+            gbb.GetResourcesManager.Load<Object>(confirmPath);
+            gbb.GetResourcesManager.Load<Object>(loadPath);
+            gbb.GetResourcesManager.Load<Object>(stayTipsPath);
+            gbb.GetResourcesManager.Load<Object>(tipsPath);
+            //>>>>>>>>>>>>>>>>使用资源<<<<<<<<<<<<<<<<<
             //初始化UIRoot
-            _uiRoot = (GameObject)Instantiate(_preUIRoot);
+            _uiRoot = (GameObject)Instantiate(gbb.GetResourcesManager.FindAsset(uiRootPath).obj);
             _uiRoot.name = "[UIRoot]";
             DontDestroyOnLoad(_uiRoot);//注册为非销毁对象
             _uiContainer = GameObject.Find("[UIRoot]/Container").transform;
             //初始化公共界面
+            _alert = createPucUI<MyAlert>(gbb.GetResourcesManager.FindAsset(alertPath).obj);
+            _confirm = createPucUI<MyConfirm>(gbb.GetResourcesManager.FindAsset(confirmPath).obj);
+            _load = createPucUI<MyLoad>(gbb.GetResourcesManager.FindAsset(loadPath).obj);
+            _stayTips = createPucUI<MyStayTips>(gbb.GetResourcesManager.FindAsset(stayTipsPath).obj);
+            _preTips = gbb.GetResourcesManager.FindAsset(tipsPath).obj;
+            //>>>>>>>>>>>>>>>>删除资源<<<<<<<<<<<<<<<<<
+            gbb.GetResourcesManager.Remove(uiRootPath);
+            gbb.GetResourcesManager.Remove(alertPath);
+            gbb.GetResourcesManager.Remove(confirmPath);
+            gbb.GetResourcesManager.Remove(loadPath);
+            gbb.GetResourcesManager.Remove(stayTipsPath);
+            gbb.GetResourcesManager.Remove(tipsPath);
+        }
 
+        //设置公共界面
+        private T createPucUI<T>(Object prefab) where T : MyBaseObject
+        {
+            T baseObject = ((GameObject)Instantiate(prefab)).GetComponent<T>();
+            baseObject.name = baseObject.name.Replace("(Clone)", "");
+            baseObject.myTransform.parent = _uiContainer;//设置父节点
+            baseObject.myTransform.localPosition = Vector3.zero;
+            baseObject.myTransform.localScale = Vector3.one;
+            baseObject.myGameObject.SetActive(false);//隐藏
+            return baseObject;
         }
 
         //创建一个新的UIBuffer
@@ -290,7 +316,11 @@ namespace WQ.Core.Manager
         //提示界面
         public MyTips Tips(string text)
         {
-            MyTips tips = null;
+            MyTips tips = ((GameObject)Instantiate(_preTips)).GetComponent<MyTips>();
+            tips.myTransform.parent = _uiContainer;
+            tips.myTransform.localPosition = Vector3.zero;
+            tips.myTransform.localScale = Vector3.one;
+            tips.SetText(text);
             return tips;
         }
         #endregion

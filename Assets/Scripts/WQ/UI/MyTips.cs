@@ -9,14 +9,17 @@ namespace WQ.UI
      * Description: 提示界面
     ****************************************************/
     [AddComponentMenu("WQ/UI/MyTips")]
-    public class MyTips : MonoBehaviour
+    public class MyTips : MyBaseObject
     {
         public UILabel label;
+        public UIPlayTween playTween;
 
         //唤醒阶段
-        void Awake()
+        public override void Awake()
         {
-
+            base.Awake();
+            playTween.Play(true);
+            playTween.onFinished.Add(new EventDelegate(onTweenFinishedHandler));
         }
 
         //设置提示信息
@@ -25,10 +28,17 @@ namespace WQ.UI
             label.text = text;
         }
 
-        //销毁
-        void OnDestroy()
+        //动画播放完成事件
+        private void onTweenFinishedHandler()
         {
+            Destroy(myGameObject);
+        }
 
+        //销毁
+        public override void OnDestroy()
+        {
+            base.OnDestroy();
+            playTween.onFinished.Clear();
         }
     }
 }

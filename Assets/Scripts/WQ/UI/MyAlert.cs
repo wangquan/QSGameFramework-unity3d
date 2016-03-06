@@ -10,45 +10,51 @@ namespace WQ.UI
      * Description: 警告界面
     ****************************************************/
     [AddComponentMenu("WQ/UI/MyAlert")]
-    public class MyAlert : MonoBehaviour
+    public class MyAlert : MyBaseObject
     {
         public UILabel label;
-        public GameObject button;
+        public UIPlayTween playTween;
+        public GameObject confirmButton;
 
-        private GameObject _gameObject;
-        private Action _callback;
+        private Action _confirmCallback;
 
         //唤醒阶段
-        void Awake()
+        public override void Awake()
         {
-            _gameObject = this.gameObject;
+            base.Awake();
+            playTween.resetOnPlay = true;
+            UIEventListener.Get(confirmButton).onClick += onConfirmClickHandler;
         }
 
         //显示
-        public void Show(string text, Action callback = null)
+        public void Show(string text, Action confirmCallback = null)
         {
+            myGameObject.SetActive(true);
             label.text = text;
-            _callback = callback;
-            if (_gameObject.activeSelf == false) _gameObject.SetActive(true);
+            playTween.Play(true);
+            this._confirmCallback = confirmCallback;
         }
 
         //隐藏
         public void Hide()
         {
-            if (_gameObject.activeSelf == true) _gameObject.SetActive(false);
+            myGameObject.SetActive(false);
+            _confirmCallback = null;
         }
 
-        //确认按钮
-        private void onConfirmButtonHandler()
+        //确认处理
+        private void onConfirmClickHandler(GameObject go)
         {
-            if (_callback != null) _callback();
+            if (_confirmCallback != null) _confirmCallback();
             Hide();
         }
 
         //销毁
-        void OnDestroy()
+        public override void OnDestroy()
         {
-
+            base.OnDestroy();
+            UIEventListener.Get(confirmButton).onClick -= onConfirmClickHandler;
+            _confirmCallback = null;
         }
     }
 }

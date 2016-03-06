@@ -3,9 +3,10 @@
 // Copyright © 2011-2014 Tasharen Entertainment
 //----------------------------------------------
 
-#if !UNITY_FLASH
+//#if !UNITY_FLASH
+//#define DYNAMIC_FONT
+//#endif
 #define DYNAMIC_FONT
-#endif
 
 using UnityEngine;
 using UnityEditor;
