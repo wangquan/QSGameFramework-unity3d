@@ -59,5 +59,12 @@ public class CallFlash
     {
         
     }
+
+    //全屏
+    [NotRenamed]
+    public static void FullScreen()
+    {
+        Debuger.Log("[CallFlash(C#)]:FullScreen");
+    }
 }
 

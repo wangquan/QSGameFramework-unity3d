@@ -124,12 +124,21 @@ namespace WQ.Core.Manager
 
         private IEnumerator loadAsyncCoroutine<T>(string path, Action<Asset> callback) where T : UnityEngine.Object
         {
+#if UNITY_FLASH
+            UnityEngine.Object obj = Resources.Load(path, typeof(T));
+            yield return null;
+            Asset asset = new Asset(path, obj);
+            addAssetToDictionary(path, asset);
+            asset.IncreaseRC();
+            callback(asset);
+#else
             ResourceRequest req = Resources.LoadAsync(path, typeof(T));
             yield return req;
             Asset asset = new Asset(path, req.asset);
             addAssetToDictionary(path, asset);
             asset.IncreaseRC();
             callback(asset);
+#endif
         }
 
         public void LoadAsync<T>(string[] paths, Action<Asset[]> callback) where T : UnityEngine.Object
@@ -161,6 +170,23 @@ namespace WQ.Core.Manager
 
         private IEnumerator loadAsyncCoroutine<T>(string[] paths, Asset[] assets, Action<Asset[]> callback, int index) where T : UnityEngine.Object
         {
+#if UNITY_FLASH
+            UnityEngine.Object obj = Resources.Load(paths[index], typeof(T));
+            yield return null;
+            Asset asset = new Asset(paths[index], obj);
+            addAssetToDictionary(paths[index], asset);
+            asset.IncreaseRC();
+            assets[index] = asset;
+            index++;
+            if (index < paths.Length)
+            {
+                loadAsync<T>(paths, assets, callback, index);
+            }
+            else
+            {
+                callback(assets);
+            }
+#else
             ResourceRequest req = Resources.LoadAsync(paths[index], typeof(T));
             yield return req;
             Asset asset = new Asset(paths[index], req.asset);
@@ -175,6 +201,7 @@ namespace WQ.Core.Manager
             {
                 callback(assets);
             }
+#endif
         }
 
         //移除一个资源

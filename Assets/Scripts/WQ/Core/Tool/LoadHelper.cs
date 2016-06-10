@@ -24,8 +24,12 @@ namespace WQ.Core.Tool
         public static string LevelName;//完成后跳转场景的名称
         public static string[] PreLoadAssetPaths;//预加载资源地址
 
-        public static event Action<int, int> AssetLoadProgressHandler;//资源加载进度
-        public static event Action<float> SceneLoadProgressHandler;//场景加载进度
+        public static Action EnterLoadHandler;//进入加载
+        public static Action ExitLoadHandler;//退出加载
+        public static Action<int, int> InitAssetLoadProgressHandler;//资源加载进度
+        public static Action<int, int> AssetLoadProgressHandler;
+        public static Action<float> InitSceneLoadProgressHandler;//场景加载进度
+        public static Action<float> SceneLoadProgressHandler;
 
         private int _index, _count;//加载资源进度
         private float _progress;//加载场景进度
@@ -53,8 +57,12 @@ namespace WQ.Core.Tool
         private void initLoadAssetStep()
         {
             Debuger.Log("开始加载资源");
+
             _index = 0;
             _count = PreLoadAssetPaths.Length;
+
+            if (InitAssetLoadProgressHandler != null) InitAssetLoadProgressHandler(_index, _count);
+
             loadAssetAsync();
         }
 
@@ -65,6 +73,7 @@ namespace WQ.Core.Tool
                 Debuger.Log("(" + _index + "/" + _count + ")" + "加载资源====>>>>" + PreLoadAssetPaths[_index]);
                 gbb.GetResourcesManager.LoadAsync<UnityEngine.Object>(PreLoadAssetPaths[_index], loadAssetAsync);
                 AssetLoadProgressHandler(_index, _count);
+                _index++;
             }else
             {
                 step = LoadStep.LoadSceneStep;
@@ -74,6 +83,8 @@ namespace WQ.Core.Tool
         private void initLoadSceneStep()
         {
             Debuger.Log("开始加载场景");
+            if (InitSceneLoadProgressHandler != null) InitSceneLoadProgressHandler(0f);
+
             StartCoroutine(loadSceneAsync());
         }
 
@@ -87,6 +98,10 @@ namespace WQ.Core.Tool
         void Awake()
         {
             Debuger.Log("=============开始加载=============");
+            Time.timeScale = 1.0f;
+
+            if (EnterLoadHandler != null) EnterLoadHandler();
+
             if (PreLoadAssetPaths == null || PreLoadAssetPaths.Length == 0)
             {
                 step = LoadStep.LoadSceneStep;
@@ -147,6 +162,14 @@ namespace WQ.Core.Tool
         void OnDestroy()
         {
             Debuger.Log("=============加载完成=============");
+            if (ExitLoadHandler != null) ExitLoadHandler();
+            EnterLoadHandler = null;
+            ExitLoadHandler = null;
+            InitAssetLoadProgressHandler = null;
+            AssetLoadProgressHandler = null;
+            InitSceneLoadProgressHandler = null;
+            SceneLoadProgressHandler = null;
+
             gbb.GetResourcesManager.ClearMemory();
         }
     }

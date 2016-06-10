@@ -1,6 +1,8 @@
 package 
 {
+	import flash.display.StageDisplayState;
 	import flash.net.SharedObject;
+	import com.unity.*;
 	
 	/**
 	 * Flash对接接口
@@ -58,6 +60,18 @@ package
 			if (_LocalData == null) _LocalData = SharedObject.getLocal("LaJiaoRenGame");
 			_LocalData.data.data = data;
 			_LocalData.flush();
+		}
+		
+		//全屏
+		public static function FullScreen():void
+		{
+			if (UnityNative.stage.displayState == StageDisplayState.NORMAL)
+			{
+				UnityNative.stage.displayState = StageDisplayState.FULL_SCREEN_INTERACTIVE;
+			}else
+			{
+				UnityNative.stage.displayState = StageDisplayState.NORMAL;
+			}
 		}
 	}
 	

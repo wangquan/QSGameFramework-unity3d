@@ -92,7 +92,7 @@ namespace WQ.Core.Tool
 
         public F globalState 
         {
-            set { _globalState = value; }
+            set { _globalState = value; _globalState.Enter(); }
             get { return _globalState; } 
         }
         public F currentState 

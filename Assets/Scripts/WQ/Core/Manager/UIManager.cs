@@ -325,6 +325,37 @@ namespace WQ.Core.Manager
         }
         #endregion
 
+        #region ************************静态方法************************
+        //世界坐标转UI坐标
+        public static Vector3 WorldPositionToUIPosition(Vector3 pos, Camera camera)
+        {
+            Vector3 sp = camera.WorldToScreenPoint(pos);
+            Vector3 up = UICamera.currentCamera.ScreenToWorldPoint(sp);
+            up.z = 0;
+            return up;
+        }
+
+        //设置Tag
+        public static void SetGameObjectTag(Transform node, string tag)
+        {
+            node.gameObject.tag = tag;
+            foreach (Transform child in node)
+            {
+                SetGameObjectTag(child, tag);
+            }
+        }
+
+        //设置Layer
+        public static void SetGameObjectLayer(Transform node, int layer)
+        {
+            node.gameObject.layer = layer;
+            foreach (Transform child in node)
+            {
+                SetGameObjectLayer(child, layer);
+            }
+        }
+        #endregion
+
         //销毁
         void OnDestroy()
         {
