@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using WQ.Core;
 
-namespace Assets.Scripts.WQ.UI
+namespace WQ.UI
 {
     /****************************************************
      * Author: wq

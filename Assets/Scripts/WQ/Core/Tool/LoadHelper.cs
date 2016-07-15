@@ -72,7 +72,7 @@ namespace WQ.Core.Tool
             {
                 Debuger.Log("(" + _index + "/" + _count + ")" + "加载资源====>>>>" + PreLoadAssetPaths[_index]);
                 gbb.GetResourcesManager.LoadAsync<UnityEngine.Object>(PreLoadAssetPaths[_index], loadAssetAsync);
-                AssetLoadProgressHandler(_index, _count);
+                if (AssetLoadProgressHandler != null) AssetLoadProgressHandler(_index, _count);
                 _index++;
             }else
             {
@@ -141,7 +141,7 @@ namespace WQ.Core.Tool
             {
                 Debuger.Log("场景加载进度====>>>>" + _asyncOperation.progress);
                 _progress = _asyncOperation.progress;
-                SceneLoadProgressHandler(_asyncOperation.progress);
+                if (SceneLoadProgressHandler != null) SceneLoadProgressHandler(_asyncOperation.progress);
             }
         }
 
