@@ -1,0 +1,29 @@
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2008
+
+Project("{39EB5CE5-6EFF-2520-CF74-4F2789CA03AA}") = "QSGameFramework-unity3d", "Assembly-CSharp.csproj", "{FD60A4FE-DE13-E662-989B-2FCB51F1117E}"
+EndProject
+Project("{39EB5CE5-6EFF-2520-CF74-4F2789CA03AA}") = "QSGameFramework-unity3d", "Assembly-CSharp-Editor.csproj", "{C8B723AB-0E31-F322-E827-70257C137D00}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FD60A4FE-DE13-E662-989B-2FCB51F1117E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD60A4FE-DE13-E662-989B-2FCB51F1117E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD60A4FE-DE13-E662-989B-2FCB51F1117E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD60A4FE-DE13-E662-989B-2FCB51F1117E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8B723AB-0E31-F322-E827-70257C137D00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8B723AB-0E31-F322-E827-70257C137D00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8B723AB-0E31-F322-E827-70257C137D00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8B723AB-0E31-F322-E827-70257C137D00}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = Assembly-CSharp.csproj
+	EndGlobalSection
+EndGlobal

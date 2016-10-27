@@ -1,6 +1,6 @@
 //----------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
+// Copyright © 2011-2016 Tasharen Entertainment
 //----------------------------------------------
 
 using UnityEngine;
@@ -402,6 +402,14 @@ public class UIWidget : UIRect
 	{
 		get
 		{
+			// Experiment with a transform-based depth, uGUI style
+			//if (mDepth == int.MinValue)
+			//{
+			//    int val = cachedTransform.GetSiblingIndex();
+			//    UIWidget pt = parent as UIWidget;
+			//    if (pt != null) val += pt.depth;
+			//    return val;
+			//}
 			return mDepth;
 		}
 		set
@@ -613,7 +621,7 @@ public class UIWidget : UIRect
 	{
 		get
 		{
-#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6
+#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7
 			BoxCollider box = collider as BoxCollider;
 #else
 			BoxCollider box = GetComponent<Collider>() as BoxCollider;
@@ -710,7 +718,7 @@ public class UIWidget : UIRect
 		else
 		{
 			UIRect pt = parent;
-			finalAlpha = (parent != null) ? pt.CalculateFinalAlpha(frameID) * mColor.a : mColor.a;
+			finalAlpha = (pt != null) ? pt.CalculateFinalAlpha(frameID) * mColor.a : mColor.a;
 		}
 	}
 
@@ -743,7 +751,7 @@ public class UIWidget : UIRect
 	}
 
 	/// <summary>
-	/// Set the widget's rectangle.
+	/// Set the widget's rectangle. XY is the bottom-left corner.
 	/// </summary>
 
 	public override void SetRect (float x, float y, float width, float height)
@@ -818,8 +826,8 @@ public class UIWidget : UIRect
 		Material rightMat = right.material;
 
 		if (leftMat == rightMat) return 0;
-		if (leftMat != null) return -1;
-		if (rightMat != null) return 1;
+		if (leftMat == null) return 1;
+		if (rightMat == null) return -1;
 
 		return (leftMat.GetInstanceID() < rightMat.GetInstanceID()) ? -1 : 1;
 	}
@@ -900,14 +908,6 @@ public class UIWidget : UIRect
 		if (NGUITools.GetActive(this))
 		{
 			base.OnValidate();
-
-			// Prior to NGUI 2.7.0 width and height was specified as transform's local scale
-			if ((mWidth == 100 || mWidth == minWidth) &&
-				(mHeight == 100 || mHeight == minHeight) && cachedTransform.localScale.magnitude > 8f)
-			{
-				UpgradeFrom265();
-				cachedTransform.localScale = Vector3.one;
-			}
 
 			if (mWidth < minWidth) mWidth = minWidth;
 			if (mHeight < minHeight) mHeight = minHeight;
@@ -1034,9 +1034,9 @@ public class UIWidget : UIRect
 	/// Remember whether we're in play mode.
 	/// </summary>
 
-	protected virtual void Awake ()
+	protected override void Awake ()
 	{
-		mGo = gameObject;
+		base.Awake();
 		mPlayMode = Application.isPlaying;
 	}
 
@@ -1049,16 +1049,6 @@ public class UIWidget : UIRect
 		base.OnInit();
 		RemoveFromPanel();
 		mMoved = true;
-
-		// Prior to NGUI 2.7.0 width and height was specified as transform's local scale
-		if (mWidth == 100 && mHeight == 100 && cachedTransform.localScale.magnitude > 8f)
-		{
-			UpgradeFrom265();
-			cachedTransform.localScale = Vector3.one;
-#if UNITY_EDITOR
-			NGUITools.SetDirty(this);
-#endif
-		}
 		Update();
 	}
 
@@ -1202,6 +1192,9 @@ public class UIWidget : UIRect
 
 		// Calculate the new position, width and height
 		Vector3 newPos = new Vector3(Mathf.Lerp(lt, rt, pvt.x), Mathf.Lerp(bt, tt, pvt.y), pos.z);
+		newPos.x = Mathf.Round(newPos.x);
+		newPos.y = Mathf.Round(newPos.y);
+
 		int w = Mathf.FloorToInt(rt - lt + 0.5f);
 		int h = Mathf.FloorToInt(tt - bt + 0.5f);
 
@@ -1309,7 +1302,7 @@ public class UIWidget : UIRect
 	{
 		get
 		{
-#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6
+#if UNITY_4_3 || UNITY_4_5
 			if (showHandlesWithMoveTool)
 			{
 				return UnityEditor.Tools.current == UnityEditor.Tool.Move;
@@ -1340,7 +1333,7 @@ public class UIWidget : UIRect
 
 			// Draw the gizmo
 			Gizmos.matrix = cachedTransform.localToWorldMatrix;
-			Gizmos.color = (UnityEditor.Selection.activeGameObject == cachedTransform) ? Color.white : outline;
+			Gizmos.color = (UnityEditor.Selection.activeGameObject == gameObject) ? Color.white : outline;
 			Gizmos.DrawWireCube(center, size);
 
 			// Make the widget selectable
@@ -1377,45 +1370,48 @@ public class UIWidget : UIRect
 
 	public bool UpdateTransform (int frame)
 	{
+		Transform trans = cachedTransform;
+		mPlayMode = Application.isPlaying;
+
 #if UNITY_EDITOR
-		if (!mMoved && !panel.widgetsAreStatic || !mPlayMode)
+		if (mMoved || !mPlayMode)
 #else
-		if (!mMoved && !panel.widgetsAreStatic)
+		if (mMoved)
 #endif
 		{
-#if UNITY_3_5 || UNITY_4_0
-			if (HasTransformChanged())
+			mMoved = true;
+			mMatrixFrame = -1;
+			trans.hasChanged = false;
+			Vector2 offset = pivotOffset;
+
+			float x0 = -offset.x * mWidth;
+			float y0 = -offset.y * mHeight;
+			float x1 = x0 + mWidth;
+			float y1 = y0 + mHeight;
+
+			mOldV0 = panel.worldToLocal.MultiplyPoint3x4(trans.TransformPoint(x0, y0, 0f));
+			mOldV1 = panel.worldToLocal.MultiplyPoint3x4(trans.TransformPoint(x1, y1, 0f));
+		}
+		else if (!panel.widgetsAreStatic && trans.hasChanged)
+		{
+			mMatrixFrame = -1;
+			trans.hasChanged = false;
+			Vector2 offset = pivotOffset;
+
+			float x0 = -offset.x * mWidth;
+			float y0 = -offset.y * mHeight;
+			float x1 = x0 + mWidth;
+			float y1 = y0 + mHeight;
+
+			Vector3 v0 = panel.worldToLocal.MultiplyPoint3x4(trans.TransformPoint(x0, y0, 0f));
+			Vector3 v1 = panel.worldToLocal.MultiplyPoint3x4(trans.TransformPoint(x1, y1, 0f));
+
+			if (Vector3.SqrMagnitude(mOldV0 - v0) > 0.000001f ||
+				Vector3.SqrMagnitude(mOldV1 - v1) > 0.000001f)
 			{
-#else
-			if (cachedTransform.hasChanged)
-			{
-				mTrans.hasChanged = false;
-#endif
-				mLocalToPanel = panel.worldToLocal * cachedTransform.localToWorldMatrix;
-				mMatrixFrame = frame;
-
-				Vector2 offset = pivotOffset;
-
-				float x0 = -offset.x * mWidth;
-				float y0 = -offset.y * mHeight;
-				float x1 = x0 + mWidth;
-				float y1 = y0 + mHeight;
-
-				Transform wt = cachedTransform;
-
-				Vector3 v0 = wt.TransformPoint(x0, y0, 0f);
-				Vector3 v1 = wt.TransformPoint(x1, y1, 0f);
-
-				v0 = panel.worldToLocal.MultiplyPoint3x4(v0);
-				v1 = panel.worldToLocal.MultiplyPoint3x4(v1);
-
-				if (Vector3.SqrMagnitude(mOldV0 - v0) > 0.000001f ||
-					Vector3.SqrMagnitude(mOldV1 - v1) > 0.000001f)
-				{
-					mMoved = true;
-					mOldV0 = v0;
-					mOldV1 = v1;
-				}
+				mMoved = true;
+				mOldV0 = v0;
+				mOldV1 = v1;
 			}
 		}
 
@@ -1423,30 +1419,6 @@ public class UIWidget : UIRect
 		if (mMoved && onChange != null) onChange();
 		return mMoved || mChanged;
 	}
-
-#if UNITY_3_5 || UNITY_4_0
-	[System.NonSerialized] Vector3 mOldPos;
-	[System.NonSerialized] Quaternion mOldRot;
-	[System.NonSerialized] Vector3 mOldScale;
-
-	/// <summary>
-	/// Whether the transform has changed since the last time it was checked.
-	/// </summary>
-
-	bool HasTransformChanged ()
-	{
-		Transform t = cachedTransform;
-		
-		if (t.position != mOldPos || t.rotation != mOldRot || t.lossyScale != mOldScale)
-		{
-			mOldPos = t.position;
-			mOldRot = t.rotation;
-			mOldScale = t.lossyScale;
-			return true;
-		}
-		return false;
-	}
-#endif
 
 	/// <summary>
 	/// Update the widget and fill its geometry if necessary. Returns whether something was changed.
@@ -1461,8 +1433,6 @@ public class UIWidget : UIRect
 
 		if (mChanged)
 		{
-			mChanged = false;
-
 			if (mIsVisibleByAlpha && finalAlpha > 0.001f && shader != null)
 			{
 				bool hadVertices = geometry.hasVertices;
@@ -1483,31 +1453,40 @@ public class UIWidget : UIRect
 						mLocalToPanel = panel.worldToLocal * cachedTransform.localToWorldMatrix;
 						mMatrixFrame = frame;
 					}
-					geometry.ApplyTransform(mLocalToPanel);
+					geometry.ApplyTransform(mLocalToPanel, panel.generateNormals);
 					mMoved = false;
+					mChanged = false;
 					return true;
 				}
+
+				mChanged = false;
 				return hadVertices;
 			}
 			else if (geometry.hasVertices)
 			{
 				if (fillGeometry) geometry.Clear();
 				mMoved = false;
+				mChanged = false;
 				return true;
 			}
 		}
 		else if (mMoved && geometry.hasVertices)
 		{
+			// Want to see what's being moved? Uncomment this line.
+			//Debug.Log("Moving " + name + " (" + Time.frameCount + ")");
+
 			if (mMatrixFrame != frame)
 			{
 				mLocalToPanel = panel.worldToLocal * cachedTransform.localToWorldMatrix;
 				mMatrixFrame = frame;
 			}
-			geometry.ApplyTransform(mLocalToPanel);
+			geometry.ApplyTransform(mLocalToPanel, panel.generateNormals);
 			mMoved = false;
+			mChanged = false;
 			return true;
 		}
 		mMoved = false;
+		mChanged = false;
 		return false;
 	}
 

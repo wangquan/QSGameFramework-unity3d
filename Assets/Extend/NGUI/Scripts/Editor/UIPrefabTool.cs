@@ -1,6 +1,6 @@
 //----------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
+// Copyright © 2011-2016 Tasharen Entertainment
 //----------------------------------------------
 
 using UnityEditor;
@@ -399,25 +399,31 @@ public class UIPrefabTool : EditorWindow
 	{
 		if (item == null || item.prefab == null) return;
 
+		// For some reason Unity 5 doesn't seem to support render textures at edit time while Unity 4 does...
+#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7
 		if (point == null) point = GetSnapshotPoint(item.prefab.transform);
 
 		if (point != null && point.thumbnail != null)
 		{
-			Debug.Log(2);
 			// Explicitly chosen thumbnail
 			item.tex = point.thumbnail;
 			item.dynamicTex = false;
 			return;
 		}
 		else if (!UnityEditorInternal.InternalEditorUtility.HasPro())
+#endif
 		{
 			// Render textures only work in Unity Pro
 			string path = "Assets/NGUI/Editor/Preview/" + item.prefab.name + ".png";
+#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7
 			item.tex = File.Exists(path) ? (Texture2D)Resources.LoadAssetAtPath(path, typeof(Texture2D)) : null;
+#else
+			item.tex = File.Exists(path) ? (Texture2D)AssetDatabase.LoadAssetAtPath(path, typeof(Texture2D)) : null;
+#endif
 			item.dynamicTex = false;
 			return;
 		}
-
+#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7
 		int dim = (cellSize - 4) * 2;
 
 		// Asset Preview-based approach is unreliable, and most of the time fails to provide a texture.
@@ -427,18 +433,15 @@ public class UIPrefabTool : EditorWindow
 		//if (item.tex != null) return;
 
 		// Let's create a basic scene
-		GameObject root = EditorUtility.CreateGameObjectWithHideFlags(
-				"Preview Root", HideFlags.HideAndDontSave);
-
-		GameObject camGO = EditorUtility.CreateGameObjectWithHideFlags(
-			"Preview Camera", HideFlags.HideAndDontSave, typeof(Camera));
+		GameObject root = EditorUtility.CreateGameObjectWithHideFlags("Preview Root", HideFlags.HideAndDontSave);
+		GameObject camGO = EditorUtility.CreateGameObjectWithHideFlags("Preview Camera", HideFlags.HideAndDontSave, typeof(Camera));
 
 		// Position it far away so that it doesn't interfere with existing objects
 		root.transform.position = new Vector3(0f, 0f, 10000f);
 		root.layer = item.prefab.layer;
 
 		// Set up the camera
-#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6
+#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7
 		Camera cam = camGO.camera;
 		cam.isOrthoGraphic = true;
 #else
@@ -479,6 +482,7 @@ public class UIPrefabTool : EditorWindow
 		// Clean up everything
 		DestroyImmediate(camGO);
 		DestroyImmediate(root);
+#endif
 	}
 
 	/// <summary>
@@ -534,7 +538,7 @@ public class UIPrefabTool : EditorWindow
 
 		// Set the camera's properties
 		cam.cullingMask = mask;
-#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6
+#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7
 		cam.isOrthoGraphic = true;
 #else
 		cam.orthographic = true;
@@ -579,7 +583,7 @@ public class UIPrefabTool : EditorWindow
 
 		cam.transform.position = pos;
 		cam.transform.rotation = rot;
-#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6
+#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7
 		cam.isOrthoGraphic = point.isOrthographic;
 #else
 		cam.orthographic = point.isOrthographic;
@@ -628,7 +632,7 @@ public class UIPrefabTool : EditorWindow
 			float.TryParse(parts[1], out far);
 			float.TryParse(parts[2], out fov);
 
-#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6
+#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7
 			cam.isOrthoGraphic = false;
 #else
 			cam.orthographic = false;

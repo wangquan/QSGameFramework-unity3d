@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -90,7 +91,7 @@ namespace WQ.Core.Tool
 
         private IEnumerator loadSceneAsync()
         {
-            _asyncOperation = Application.LoadLevelAsync(LevelName);
+            _asyncOperation = SceneManager.LoadSceneAsync(LevelName);
             yield return _asyncOperation;
         }
 
@@ -155,7 +156,7 @@ namespace WQ.Core.Tool
                 gbb.GetResourcesManager.ClearMemory();
             }
             PreLoadAssetPaths = paths;
-            Application.LoadLevel("load");
+            SceneManager.LoadScene("load");
         }
 
         //销毁
