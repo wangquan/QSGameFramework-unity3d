@@ -1,6 +1,6 @@
 //----------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
+// Copyright © 2011-2016 Tasharen Entertainment
 //----------------------------------------------
 
 using UnityEngine;
@@ -88,7 +88,7 @@ public class UIButton : UIButtonColor
 		get
 		{
 			if (!enabled) return false;
-#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6
+#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7
 			Collider col = collider;
 #else
 			Collider col = gameObject.GetComponent<Collider>();
@@ -101,7 +101,7 @@ public class UIButton : UIButtonColor
 		{
 			if (isEnabled != value)
 			{
-#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6
+#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7
 				Collider col = collider;
 #else
 				Collider col = gameObject.GetComponent<Collider>();
@@ -109,7 +109,8 @@ public class UIButton : UIButtonColor
 				if (col != null)
 				{
 					col.enabled = value;
-					SetState(value ? State.Normal : State.Disabled, false);
+					UIButton[] buttons = GetComponents<UIButton>();
+					foreach (UIButton btn in buttons) btn.SetState(value ? State.Normal : State.Disabled, false);
 				}
 				else
 				{
@@ -118,7 +119,8 @@ public class UIButton : UIButtonColor
 					if (c2d != null)
 					{
 						c2d.enabled = value;
-						SetState(value ? State.Normal : State.Disabled, false);
+						UIButton[] buttons = GetComponents<UIButton>();
+						foreach (UIButton btn in buttons) btn.SetState(value ? State.Normal : State.Disabled, false);
 					}
 					else enabled = value;
 				}
@@ -209,18 +211,7 @@ public class UIButton : UIButtonColor
 #endif
 		if (isEnabled)
 		{
-			if (mInitDone)
-			{
-				if (UICamera.currentScheme == UICamera.ControlScheme.Controller)
-				{
-					OnHover(UICamera.selectedObject == gameObject);
-				}
-				else if (UICamera.currentScheme == UICamera.ControlScheme.Mouse)
-				{
-					OnHover(UICamera.hoveredObject == gameObject);
-				}
-				else SetState(State.Normal, false);
-			}
+			if (mInitDone) OnHover(UICamera.hoveredObject == gameObject);
 		}
 		else SetState(State.Disabled, true);
 	}
@@ -251,7 +242,7 @@ public class UIButton : UIButtonColor
 
 	protected virtual void OnClick ()
 	{
-		if (current == null && isEnabled)
+		if (current == null && isEnabled && UICamera.currentTouchID != -2 && UICamera.currentTouchID != -3)
 		{
 			current = this;
 			EventDelegate.Execute(onClick);

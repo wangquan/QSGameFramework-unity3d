@@ -46,6 +46,9 @@ public abstract class UIBasicSprite : UIWidget
 	[HideInInspector][SerializeField] protected float mFillAmount = 1.0f;
 	[HideInInspector][SerializeField] protected bool mInvert = false;
 	[HideInInspector][SerializeField] protected Flip mFlip = Flip.Nothing;
+	[HideInInspector][SerializeField] protected bool mApplyGradient = false;
+	[HideInInspector][SerializeField] protected Color mGradientTop = Color.white;
+	[HideInInspector][SerializeField] protected Color mGradientBottom = new Color(0.7f, 0.7f, 0.7f);
 
 	// Cached to avoid allocations
 	[System.NonSerialized] Rect mInnerUV = new Rect();
@@ -284,7 +287,7 @@ public abstract class UIBasicSprite : UIWidget
 	/// Final widget's color passed to the draw buffer.
 	/// </summary>
 
-	Color32 drawingColor
+	protected Color32 drawingColor
 	{
 		get
 		{
@@ -294,9 +297,10 @@ public abstract class UIBasicSprite : UIWidget
 
 			if (QualitySettings.activeColorSpace == ColorSpace.Linear)
 			{
-				colF.r = Mathf.Pow(colF.r, 2.2f);
-				colF.g = Mathf.Pow(colF.g, 2.2f);
-				colF.b = Mathf.Pow(colF.b, 2.2f);
+				colF.r = Mathf.GammaToLinearSpace(colF.r);
+				colF.g = Mathf.GammaToLinearSpace(colF.g);
+				colF.b = Mathf.GammaToLinearSpace(colF.b);
+				colF.a = Mathf.GammaToLinearSpace(colF.a);
 			}
 			return colF;
 		}
@@ -343,7 +347,6 @@ public abstract class UIBasicSprite : UIWidget
 	{
 		Vector4 v = drawingDimensions;
 		Vector4 u = drawingUVs;
-		Color32 c = drawingColor;
 
 		verts.Add(new Vector3(v.x, v.y));
 		verts.Add(new Vector3(v.x, v.w));
@@ -355,10 +358,21 @@ public abstract class UIBasicSprite : UIWidget
 		uvs.Add(new Vector2(u.z, u.w));
 		uvs.Add(new Vector2(u.z, u.y));
 
-		cols.Add(c);
-		cols.Add(c);
-		cols.Add(c);
-		cols.Add(c);
+		if (!mApplyGradient)
+		{
+			Color32 c = drawingColor;
+			cols.Add(c);
+			cols.Add(c);
+			cols.Add(c);
+			cols.Add(c);
+		}
+		else
+		{
+			AddVertexColours(cols, 1, 1);
+			AddVertexColours(cols, 1, 2);
+			AddVertexColours(cols, 2, 2);
+			AddVertexColours(cols, 2, 1);
+		}
 	}
 
 	/// <summary>
@@ -445,11 +459,39 @@ public abstract class UIBasicSprite : UIWidget
 				uvs.Add(new Vector2(mTempUVs[x2].x, mTempUVs[y2].y));
 				uvs.Add(new Vector2(mTempUVs[x2].x, mTempUVs[y].y));
 
-				cols.Add(c);
-				cols.Add(c);
-				cols.Add(c);
-				cols.Add(c);
+				if (!mApplyGradient)
+				{
+					cols.Add(c);
+					cols.Add(c);
+					cols.Add(c);
+					cols.Add(c);
+				}
+				else
+				{
+					AddVertexColours(cols, x, y);
+					AddVertexColours(cols, x, y2);
+					AddVertexColours(cols, x2, y2);
+					AddVertexColours(cols, x2, y);
+				}
 			}
+		}
+	}
+	
+	/// <summary>
+	/// Adds a gradient-based vertex color to the sprite.
+	/// </summary>
+
+	[System.Diagnostics.DebuggerHidden]
+	[System.Diagnostics.DebuggerStepThrough]
+	void AddVertexColours (BetterList<Color32> cols, int x, int y)
+	{
+		if (y == 0 || y == 1)
+		{
+			cols.Add((Color32)(drawingColor * mGradientBottom));
+		}
+		else if (y == 2 || y == 3)
+		{
+			cols.Add((Color32)(drawingColor * mGradientTop));
 		}
 	}
 
@@ -890,7 +932,7 @@ public abstract class UIBasicSprite : UIWidget
 							tileStartX += tileSize.x;
 						}
 					}
-					else if ((y == 0 && bottomType == AdvancedType.Sliced) || (y == 2 && topType == AdvancedType.Sliced))
+					else if ((y == 0 && bottomType != AdvancedType.Invisible) || (y == 2 && topType != AdvancedType.Invisible))
 					{
 						Fill(verts, uvs, cols,
 							mTempPos[x].x, mTempPos[x2].x,
@@ -932,7 +974,7 @@ public abstract class UIBasicSprite : UIWidget
 							tileStartY += tileSize.y;
 						}
 					}
-					else if ((x == 0 && leftType == AdvancedType.Sliced) || (x == 2 && rightType == AdvancedType.Sliced))
+					else if ((x == 0 && leftType != AdvancedType.Invisible) || (x == 2 && rightType != AdvancedType.Invisible))
 					{
 						Fill(verts, uvs, cols,
 							mTempPos[x].x, mTempPos[x2].x,
@@ -943,11 +985,15 @@ public abstract class UIBasicSprite : UIWidget
 				}
 				else // Corner
 				{
-					Fill(verts, uvs, cols,
-						mTempPos[x].x, mTempPos[x2].x,
-						mTempPos[y].y, mTempPos[y2].y,
-						mTempUVs[x].x, mTempUVs[x2].x,
-						mTempUVs[y].y, mTempUVs[y2].y, c);
+					if ((y == 0 && bottomType != AdvancedType.Invisible) || (y == 2 && topType != AdvancedType.Invisible) ||
+						(x == 0 && leftType != AdvancedType.Invisible) || (x == 2 && rightType != AdvancedType.Invisible))
+					{
+						Fill(verts, uvs, cols,
+							mTempPos[x].x, mTempPos[x2].x,
+							mTempPos[y].y, mTempPos[y2].y,
+							mTempUVs[x].x, mTempUVs[x2].x,
+							mTempUVs[y].y, mTempUVs[y2].y, c);
+					}
 				}
 			}
 		}
